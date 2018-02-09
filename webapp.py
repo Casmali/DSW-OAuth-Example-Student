@@ -13,15 +13,16 @@ import os
 app = Flask(__name__)
 
 app.debug = True #Change this to False for production
-
+#use secret key to sign the session
 app.secret_key = os.environ['SECRET_KEY'] 
+
 oauth = OAuth(app)
 
-
+#set github as oath provider
 github = oauth.remote_app(
     'github',
-    consumer_key=os.environ['GITHUB_CLIENT_ID'], 
-    consumer_secret=os.environ['GITHUB_CLIENT_SECRET'],
+    consumer_key=os.environ['GITHUB_CLIENT_ID'], #your web app's "username" for github Oath
+    consumer_secret=os.environ['GITHUB_CLIENT_SECRET'], #your web app's "password" for githuboath
     request_token_params={'scope': 'user:email'}, #request read-only access to the user's email.  For a list of possible scopes, see developer.github.com/apps/building-oauth-apps/scopes-for-oauth-apps
     base_url='https://api.github.com/',
     request_token_url=None,
@@ -38,7 +39,7 @@ def inject_logged_in():
 @app.route('/')
 def home():
     return render_template('home.html')
-
+#redirect to githubs oath page and confirm the callback URL
 @app.route('/login')
 def login():   
     return github.authorize(callback=url_for('authorized', _external=True, _scheme='https'))
@@ -48,7 +49,7 @@ def logout():
     session.clear()
     return render_template('message.html', message='You were logged out')
 
-@app.route()#the route should match the callback URL registered with the OAuth provider
+@app.route('/login/authorized')#the route should match the callback URL registered with the OAuth provider
 def authorized():
     resp = github.authorized_response()
     if resp is None:
@@ -56,8 +57,14 @@ def authorized():
         message = 'Access denied: reason=' + request.args['error'] + ' error=' + request.args['error_description'] + ' full=' + pprint.pformat(request.args)      
     else:
         try:
+            session['github_token']=(resp['access_token'],'')
+            session['user_data']=github.get('user').data
+            message="you done did it" + session['user_data']['login']
             #save user data and set log in message
         except:
+            session.clear()
+            message='what do ya think you are doin punk'
+            
             #clear the session and give error message
     return render_template('message.html', message=message)
 
@@ -74,6 +81,7 @@ def renderPage1():
 def renderPage2():
     return render_template('page2.html')
 
+#never have to call this it just automatically is calle dto check how is logged in
 @github.tokengetter
 def get_github_oauth_token():
     return session.get('github_token')
