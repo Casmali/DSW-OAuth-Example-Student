@@ -49,7 +49,7 @@ def login():
 def logout():
     session.clear()
     flash("you were logged outa")
-    return render_template('page.html', message='test')
+    return render_template('home.html')
 
 @app.route('/login/authorized')#the route should match the callback URL registered with the OAuth provider
 def authorized():
@@ -69,7 +69,7 @@ def authorized():
             message='what do ya think you are doin punk'
             
             #clear the session and give error message
-    return render_template('page1.html', message="test")
+    return render_template('home.html')
 
 
 @app.route('/page1')
