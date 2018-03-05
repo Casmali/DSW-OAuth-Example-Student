@@ -69,7 +69,7 @@ def authorized():
             message='what do ya think you are doin punk'
             
             #clear the session and give error message
-    return render_template('page.html', message="test")
+    return render_template('page1.html', message="test")
 
 
 @app.route('/page1')
